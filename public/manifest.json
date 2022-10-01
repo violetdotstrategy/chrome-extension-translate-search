@@ -1,32 +1,29 @@
 {
   "manifest_version": 3,
 
-  "name": "Chrome Extension TypeScript Starter",
-  "description": "Chrome Extension, TypeScript, Visual Studio Code",
-  "version": "1.0",
-
-  "options_ui": {
-    "page": "options.html"
+  "name": "Translate and Search",
+  "description": "Translate and then search.",
+  "homepage_url": "https://github.com/34j/chrome-extension-translate-search",
+  "author": "34j",
+  "version": "0.0.1",
+  "icons": {
+    "16": "icon_normal.png",
+    "48": "icon_normal.png",
+    "128": "icon_normal.png",
+    "256": "icon_normal.png"
   },
 
   "action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html"
+    "default_icon": "icon_error.png"
   },
-
-  "content_scripts": [
-      {
-          "matches": ["<all_urls>"],
-          "js": ["js/vendor.js", "js/content_script.js"]
-      }
-  ],
 
   "background": {
     "service_worker": "js/background.js"
   },
 
   "permissions": [
-    "storage"
+    "storage",
+    "webNavigation"
   ],
 
   "host_permissions": [
