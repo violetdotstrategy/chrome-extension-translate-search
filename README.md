@@ -2,10 +2,10 @@
 
 ![GitHub](https://img.shields.io/github/license/34j/chrome-extension-translate-search)
 
-A browser extension that when navigating to a url that contains the parameter `q`
+A browser extension that when navigating to a url that contains the parameter `q` or `p`
 
 - blocks navigating
-- then translates the content of the parameter `q` or `p`
+- then translates the content of the parameter `q` and `p`
 - then navigates back to the modified url.
 
 ## Tested
@@ -18,4 +18,4 @@ A browser extension that when navigating to a url that contains the parameter `q
 
 ## 日本語の説明
 
-パラメータ`q`または`p`を含むurlにナビゲートしたときに、ナビゲートをブロックし、パラメータ`q`の内容を翻訳し、再びナビゲートするブラウザ拡張機能です。
+パラメータ`q`または`p`を含むurlにナビゲートしたときに、ナビゲートをブロックし、パラメータ`q`と`p`の内容を翻訳し、再びナビゲートするブラウザ拡張機能です。
