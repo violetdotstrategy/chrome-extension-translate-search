@@ -1,13 +1,13 @@
 import translate from 'google-translate-api-x'
 
 //Check, change, show the function is activated or not.
-let activated = true;
+let activated = false;
 
-function showActivated() {
+async function showActivated() {
   chrome.action.setIcon({
     path: activated ? "/icon_normal.png" : "/icon_inactive.png"
   })
-  chrome.action.setBadgeText({ text: activated ? "ON" : "OFF" })
+  await chrome.action.setBadgeText({ text: activated ? "ON" : "OFF" })
 }
 
 chrome.storage.local.get("activated", items => {
@@ -15,11 +15,36 @@ chrome.storage.local.get("activated", items => {
   showActivated();
 })
 
+async function getActiveTab() {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+  if (tabs.length === 0) {
+    return null
+  }
+  return tabs[0]
+}
 
-chrome.action.onClicked.addListener(e => {
+
+chrome.action.onClicked.addListener(async e => {
   activated = !activated
-  chrome.storage.local.set({ "activated": activated })
-  showActivated()
+  const promises = [
+    chrome.storage.local.set({ "activated": activated }),
+    showActivated()
+  ]
+  if (activated) {
+    promises.push(getActiveTab().then(async tab => {
+      if (tab) {
+        const tabId = tab.id
+        const tabUrl = tab.url
+        console.info(`Tab ${tabId} activated`)
+        if (tabId && tabUrl && !tabUrl.includes('[?&]translated=true') && !tabUrl.includes('uviewer') && tabUrl.match('[?&][pq]=')) {
+          await chrome.tabs.update(tabId, { url: "" }).then(async _ => {
+            await translateUrl(tabUrl).then(url => chrome.tabs.update(tabId, { url }))
+          })
+        }
+      }
+    }))
+  }
+  await Promise.all(promises)
 })
 
 //https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/webNavigation
@@ -27,20 +52,25 @@ chrome.action.onClicked.addListener(e => {
 //onBeforeNavigate prevents loading but onHistoryStateUpdated does not.
 //Using onHistoryStateUpdated only in such websites will be nice.
 chrome.webNavigation.onBeforeNavigate.addListener(
-  details => {
-    if (!details.url.includes('translated=true')
+  async details => {
+    if (activated
+      && !details.url.includes('translated=true')
       && !details.url.includes("uviewer")
-      && activated
     ) {
-      chrome.tabs.update(details.tabId, { url: "" }).then(async _ => {
+      if (true) {
+        // Avoid loading the page for the original URL.
+        await chrome.tabs.update(details.tabId, { url: "" }).then(async _ => {
+          await translateUrl(details.url).then(url => chrome.tabs.update(details.tabId, { url }))
+        })
+      } else {
+        // This will partially load the page for the original URL.
         await translateUrl(details.url).then(url => chrome.tabs.update(details.tabId, { url }))
       }
-      )
     }
   },
   {
     url: [
-      { urlMatches: '[?&]q=' }
+      { urlMatches: '[?&][pq]=' }
     ]
   }
 )
@@ -70,6 +100,10 @@ async function translateUrl(url: string) {
   const q = u.searchParams.get('q')
   if (q) {
     u.searchParams.set('q', await translateText(q))
+  }
+  const p = u.searchParams.get('p')
+  if (p) {
+    u.searchParams.set('p', await translateText(p))
   }
   u.searchParams.set('translated', 'true')
   return u.toString()
